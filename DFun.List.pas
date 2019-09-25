@@ -52,8 +52,8 @@ type
       const AList: IList<A>);
     class function SortBy<A>(const AFunc: TFunc<A, A, Integer>;
       const AList: IList<A>): IList<A>;
-    class function GroupBy<A>(const AFunc: TFunc<A, A, Integer>;
-      const AList: IList<A>): IList<IList<A>>;
+//    class function GroupBy<A>(const AFunc: TFunc<A, A, Integer>;
+//      const AList: IList<A>): IList<IList<A>>;
     class function ToString(const AList: IList<String>): String; reintroduce;
     class function FromArray<A>(const AList: array of A): IList<A>;
     class function FromTList<A>(const AList: TList<A>): IList<A>;
@@ -193,11 +193,11 @@ begin
   end;
 end;
 
-class function List.GroupBy<A>(const AFunc: TFunc<A, A, Integer>;
-  const AList: IList<A>): IList<IList<A>>;
-begin
-
-end;
+//class function List.GroupBy<A>(const AFunc: TFunc<A, A, Integer>;
+//  const AList: IList<A>): IList<IList<A>>;
+//begin
+//
+//end;
 
 class function List.Map<A, B>(const AFunc: TFunc<A, B>;
   const AList: IList<A>): IList<B>;
