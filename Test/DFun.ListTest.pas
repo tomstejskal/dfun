@@ -16,6 +16,8 @@ type
   published
     procedure TestEmpty;
     procedure TestCons;
+    procedure TestSingleton;
+    procedure TestGenerate;
     procedure TestMap;
     procedure TestFilter;
     procedure TestFoldLeft;
@@ -27,6 +29,7 @@ type
     procedure TestAny;
     procedure TestEach;
     procedure TestSortBy;
+    procedure TestGroupBy;
   end;
 
 implementation
@@ -112,6 +115,42 @@ begin
       List.FromArray<String>(['a', 'b', 'c', 'd', 'e'])));
 end;
 
+procedure ListTest.TestGenerate;
+begin
+  CheckNotEquals('',
+    List.ToString(
+      List.Map<Integer, String>(IntToStr,
+        List.Generate<Integer>(
+          function: Integer begin Result := Random(1000) end,
+          10000))));
+end;
+
+procedure ListTest.TestGroupBy;
+begin
+  CheckEquals('[[1, 1], [2, 2, 2], [3], [4, 4], [5]]',
+    List.ToString(
+      List.Map<IList<Integer>, String>(
+        function(X: IList<Integer>): String begin
+          Result := List.ToString(List.Map<Integer, String>(IntToStr, X));
+        end,
+        List.GroupBy<Integer>(
+          function(X, Y: Integer): Integer begin Result := X - Y end,
+          List.FromArray<Integer>([1, 1, 2, 2, 2, 3, 4, 4, 5])))));
+  CheckNotEquals('',
+    List.ToString(
+      List.Map<IList<Integer>, String>(
+        function(X: IList<Integer>): String begin
+          Result := List.ToString(List.Map<Integer, String>(IntToStr, X));
+        end,
+        List.GroupBy<Integer>(
+          function(X, Y: Integer): Integer begin Result := X - Y end,
+          List.SortBy<Integer>(
+            function(X, Y: Integer): Integer begin Result := X - y end,
+            List.Generate<Integer>(
+              function: Integer begin Result := Random(1000) end,
+              10000))))));
+end;
+
 procedure ListTest.TestMap;
 begin
   CheckEquals('[3, 6, 9, 12, 15]',
@@ -135,6 +174,14 @@ begin
       List.Map<Integer, String>(IntToStr,
         List.Reverse<Integer>(
           List.FromArray<Integer>([1, 2, 3, 4, 5])))));
+end;
+
+procedure ListTest.TestSingleton;
+begin
+  CheckEquals('[1]',
+    List.ToString(
+      List.Map<Integer, String>(IntToStr,
+        List.Singleton<Integer>(1))));
 end;
 
 procedure ListTest.TestSortBy;

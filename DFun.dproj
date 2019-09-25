@@ -88,6 +88,7 @@
         <DCCReference Include="DFun.Either.pas"/>
         <DCCReference Include="DFun.List.pas"/>
         <DCCReference Include="DFun.Maybe.pas"/>
+        <DCCReference Include="DFun.Pair.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

@@ -7,7 +7,8 @@ uses
   System.SysUtils,
   System.Generics.Collections,
   System.Generics.Defaults,
-  DFun.Maybe;
+  DFun.Maybe,
+  DFun.Pair;
 
 type
   IList<A> = interface
@@ -29,6 +30,9 @@ type
   List = class
     class function Empty<A>: IList<A>;
     class function Cons<A>(const AHead: A; const ATail: IList<A>): IList<A>;
+    class function Singleton<A>(const AValue: A): IList<A>;
+    class function Generate<A>(const AFunc: TFunc<A>;
+      const ACount: Integer): IList<A>;
     class function Map<A, B>(const AFunc: TFunc<A, B>;
       const AList: IList<A>): IList<B>;
     class function Filter<A>(const AFunc: TFunc<A, Boolean>;
@@ -52,8 +56,8 @@ type
       const AList: IList<A>);
     class function SortBy<A>(const AFunc: TFunc<A, A, Integer>;
       const AList: IList<A>): IList<A>;
-//    class function GroupBy<A>(const AFunc: TFunc<A, A, Integer>;
-//      const AList: IList<A>): IList<IList<A>>;
+    class function GroupBy<A>(const AFunc: TFunc<A, A, Integer>;
+      const AList: IList<A>): IList<IList<A>>;
     class function ToString(const AList: IList<String>): String; reintroduce;
     class function FromArray<A>(const AList: array of A): IList<A>;
     class function FromTList<A>(const AList: TList<A>): IList<A>;
@@ -193,11 +197,67 @@ begin
   end;
 end;
 
-//class function List.GroupBy<A>(const AFunc: TFunc<A, A, Integer>;
-//  const AList: IList<A>): IList<IList<A>>;
-//begin
-//
-//end;
+class function List.Generate<A>(const AFunc: TFunc<A>;
+  const ACount: Integer): IList<A>;
+var
+  I: Integer;
+begin
+  Result := Empty<A>;
+  for I := 0 to ACount - 1 do begin
+    Result := Cons<A>(AFunc, Result);
+  end;
+  Result := Reverse<A>(Result);
+end;
+
+class function List.GroupBy<A>(const AFunc: TFunc<A, A, Integer>;
+  const AList: IList<A>): IList<IList<A>>;
+var
+  Acc: IPair<IMaybe<IPair<A, IList<A>>>, IList<IList<A>>>;
+begin
+  Acc :=
+    FoldLeft<A, IPair<IMaybe<IPair<A, IList<A>>>, IList<IList<A>>>>(
+      function(X: A; Acc: IPair<IMaybe<IPair<A, IList<A>>>, IList<IList<A>>>): IPair<IMaybe<IPair<A, IList<A>>>, IList<IList<A>>> begin
+        Result := Maybe.Match<IPair<A, IList<A>>, IPair<IMaybe<IPair<A, IList<A>>>, IList<IList<A>>>>(
+          function: IPair<IMaybe<IPair<A, IList<A>>>, IList<IList<A>>> begin
+            Result := Pair.Create(
+              Maybe.Just(
+                Pair.Create(
+                  X,
+                  List.Singleton(X))),
+              List.Empty<IList<A>>);
+          end,
+          function(Y: IPair<A, IList<A>>): IPair<IMaybe<IPair<A, IList<A>>>, IList<IList<A>>> begin
+            if AFunc(X, Y.First) = 0 then begin
+              Result := Pair.Create(
+                Maybe.Just(
+                  Pair.Create(
+                    Y.First,
+                    List.Cons<A>(X, Y.Second))),
+                Acc.Second);
+            end else begin
+              Result := Pair.Create(
+                Maybe.Just(
+                  Pair.Create(
+                    X,
+                    List.Singleton(X))),
+                List.Cons<IList<A>>(Y.Second, Acc.Second));
+            end;
+          end,
+          Acc.First);
+      end,
+      Pair.Create(Maybe.Nothing<IPair<A, IList<A>>>, List.Empty<IList<A>>),
+      AList);
+  Result :=
+    List.Reverse<IList<A>>(
+      Maybe.Match<IPair<A, IList<A>>, IList<IList<A>>>(
+        function: IList<IList<A>> begin
+          Result := Acc.Second;
+        end,
+        function(X: IPair<A, IList<A>>): IList<IList<A>> begin
+          Result := List.Cons<IList<A>>(X.Second, Acc.Second);
+        end,
+        Acc.First));
+end;
 
 class function List.Map<A, B>(const AFunc: TFunc<A, B>;
   const AList: IList<A>): IList<B>;
@@ -242,6 +302,11 @@ begin
     function (A, B: Integer): Integer begin Result := A + B end,
     0,
     AList);
+end;
+
+class function List.Singleton<A>(const AValue: A): IList<A>;
+begin
+  Result := Cons<A>(AValue, Empty<A>);
 end;
 
 class function List.SortBy<A>(const AFunc: TFunc<A, A, Integer>;
