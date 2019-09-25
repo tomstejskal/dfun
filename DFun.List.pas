@@ -13,6 +13,18 @@ type
   ['{F2AD450F-F208-4026-B603-A95C9C69191D}']
   end;
 
+  IEmptyCell<A> = interface
+  ['{F382F9DC-3615-4FFA-BC44-4A055FC8A78B}']
+  end;
+
+  IConsCell<A> = interface(IList<A>)
+  ['{C9CA2B0E-AFAF-4597-A139-57CA5EAAA9C6}']
+    function GetHead: A;
+    function GetTail: IList<A>;
+    property Head: A read GetHead;
+    property Tail: IList<A> read GetTail;
+  end;
+
   List = class
     class function Empty<A>: IList<A>;
     class function Cons<A>(const AHead: A; const ATail: IList<A>): IList<A>;
@@ -42,17 +54,19 @@ type
     class function ToTList<A>(const AList: IList<A>): TList<A>;
   end;
 
-  EmptyVal<A> = class(TInterfacedObject, IList<A>)
+  EmptyCell<A> = class(TInterfacedObject, IList<A>, IEmptyCell<A>)
   end;
 
-  ConsVal<A> = class(TInterfacedObject, IList<A>)
+  ConsCell<A> = class(TInterfacedObject, IList<A>, IConsCell<A>)
   strict private
     fHead: A;
     fTail: IList<A>;
   public
     constructor Create(const AHead: A; const ATail: IList<A>);
-    property Head: A read fHead;
-    property Tail: IList<A> read fTail;
+    function GetHead: A;
+    function GetTail: IList<A>;
+    property Head: A read GetHead;
+    property Tail: IList<A> read GetTail;
   end;
 
 implementation
@@ -94,7 +108,7 @@ end;
 class function List.Cons<A>(const AHead: A;
   const ATail: IList<A>): IList<A>;
 begin
-  Result := ConsVal<A>.Create(AHead, ATail);
+  Result := ConsCell<A>.Create(AHead, ATail);
 end;
 
 class procedure List.Each<A>(const AProc: TProc<A>; const AList: IList<A>);
@@ -107,7 +121,7 @@ end;
 
 class function List.Empty<A>: IList<A>;
 begin
-  Result := EmptyVal<A>.Create;
+  Result := EmptyCell<A>.Create;
 end;
 
 class function List.Filter<A>(const AFunc: TFunc<A, Boolean>;
@@ -127,25 +141,22 @@ end;
 
 class function List.FoldLeft<A, B>(const AFunc: TFunc<A, B, B>;
   const AInit: B; const AList: IList<A>): B;
+var
+  mList: IList<A>;
+  mCons: IConsCell<A>;
 begin
-  if AList is EmptyVal<A> then begin
-    Result := AInit;
-  end else begin
-    Result := FoldLeft(AFunc,
-      AFunc((AList as ConsVal<A>).Head, AInit),
-      (AList as ConsVal<A>).Tail);
+  mList := AList;
+  Result := AInit;
+  while Supports(mList, IConsCell<A>, mCons) do begin
+    Result := AFunc(mCons.Head, Result);
+    mList := mCons.Tail;
   end;
 end;
 
 class function List.FoldRight<A, B>(const AFunc: TFunc<A, B, B>;
   const AInit: B; const AList: IList<A>): B;
 begin
-  if AList is EmptyVal<A> then begin
-    Result := AInit;
-  end else begin
-    Result := AFunc((AList as ConsVal<A>).Head,
-      FoldRight(AFunc, AInit, (AList as ConsVal<A>).Tail));
-  end;
+  Result := FoldLeft<A, B>(AFunc, AInit, Reverse<A>(AList));
 end;
 
 class function List.FromArray<A>(const AList: array of A): IList<A>;
@@ -222,13 +233,23 @@ begin
     AList);
 end;
 
-{ ConsVal<A> }
+{ ConsCell<A> }
 
-constructor ConsVal<A>.Create(const AHead: A; const ATail: IList<A>);
+constructor ConsCell<A>.Create(const AHead: A; const ATail: IList<A>);
 begin
   inherited Create;
   fHead := AHead;
   fTail := ATail;
+end;
+
+function ConsCell<A>.GetHead: A;
+begin
+  Result := fHead;
+end;
+
+function ConsCell<A>.GetTail: IList<A>;
+begin
+  Result := fTail;
 end;
 
 end.
