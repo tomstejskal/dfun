@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{1AD78D73-A372-493A-8CBC-E309CAB9FBB2}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="DFun.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Test\DFunTests.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="DFun">
+        <MSBuild Projects="DFun.dproj"/>
+    </Target>
+    <Target Name="DFun:Clean">
+        <MSBuild Projects="DFun.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DFun:Make">
+        <MSBuild Projects="DFun.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DFunTests">
+        <MSBuild Projects="Test\DFunTests.dproj"/>
+    </Target>
+    <Target Name="DFunTests:Clean">
+        <MSBuild Projects="Test\DFunTests.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DFunTests:Make">
+        <MSBuild Projects="Test\DFunTests.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="DFun;DFunTests"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="DFun:Clean;DFunTests:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="DFun:Make;DFunTests:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

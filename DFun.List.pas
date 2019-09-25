@@ -27,14 +27,17 @@ type
       const AInit: B;
       const AList: IList<A>): B;
     class function Reverse<A>(const AList: IList<A>): IList<A>;
-    class function Sum(const AList: IList<Extended>): Extended;
-    class function Product(const AList: IList<Extended>): Extended;
+    class function Sum(const AList: IList<Integer>): Integer; overload;
+    class function Sum(const AList: IList<Extended>): Extended; overload;
+    class function Product(const AList: IList<Integer>): Integer; overload;
+    class function Product(const AList: IList<Extended>): Extended; overload;
     class function All<A>(const AFunc: TFunc<A, Boolean>;
       const AList: IList<A>): Boolean;
     class function Any<A>(const AFunc: TFunc<A, Boolean>;
       const AList: IList<A>): Boolean;
     class procedure Each<A>(const AProc: TProc<A>;
       const AList: IList<A>);
+    class function ToString(const AList: IList<String>): String;
     class function FromArray<A>(const AList: array of A): IList<A>;
     class function ToTList<A>(const AList: IList<A>): TList<A>;
   end;
@@ -72,6 +75,20 @@ begin
     function(X: A; Acc: Boolean): Boolean begin Result := Acc or AFunc(X) end,
     False,
     AList);
+end;
+
+class function List.ToString(const AList: IList<String>): String;
+begin
+  Result := '[' + FoldLeft<String, String>(
+    function(X: String; Acc: String): String begin
+      Result := Acc;
+      if Acc <> '' then begin
+        Result := Result + ', ';
+      end;
+      Result := Result + X
+    end,
+    '',
+    AList) + ']';
 end;
 
 class function List.Cons<A>(const AHead: A;
@@ -152,6 +169,14 @@ begin
     AList);
 end;
 
+class function List.Product(const AList: IList<Integer>): Integer;
+begin
+  Result := FoldLeft<Integer, Integer>(
+    function (A, B: Integer): Integer begin Result := A * B end,
+    1,
+    AList);
+end;
+
 class function List.Product(const AList: IList<Extended>): Extended;
 begin
   Result := FoldLeft<Extended, Extended>(
@@ -167,6 +192,14 @@ begin
       Result := Cons<A>(X, Acc);
     end,
     Empty<A>,
+    AList);
+end;
+
+class function List.Sum(const AList: IList<Integer>): Integer;
+begin
+  Result := FoldLeft<Integer, Integer>(
+    function (A, B: Integer): Integer begin Result := A + B end,
+    0,
     AList);
 end;
 
