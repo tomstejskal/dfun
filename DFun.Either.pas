@@ -11,6 +11,18 @@ type
   ['{4CBE3C0C-1517-4001-A388-FCDC46E1235F}']
   end;
 
+  ILeftVal<A, B> = interface(IEither<A, B>)
+  ['{A74BA450-5CAC-40CD-BFFD-F660F6F9487E}']
+    function GetValue: A;
+    property Value: A read GetValue;
+  end;
+
+  IRightVal<A, B> = interface(IEither<A, B>)
+  ['{C96B8F5F-6F74-4B4C-A37B-AC29B354437B}']
+    function GetValue: B;
+    property Value: B read GetValue;
+  end;
+
   Either = class
     class function Left<A, B>(const AValue: A): IEither<A, B>;
     class function Right<A, B>(const AValue: B): IEither<A, B>;
@@ -19,51 +31,41 @@ type
       const AValue: IEither<A, B>): C;
     class function Map<A, B, C>(const AFunc: TFunc<B, C>;
       const AValue: IEither<A, B>): IEither<A, C>;
-    class function AndMap<A, B, C>(const AFunc: IEither<A, TFunc<B, C>>;
-      const AValue: IEither<A, B>): IEither<A, C>;
     class function AndThen<A, B, C>(const AFunc: TFunc<B, IEither<A, C>>;
       const AValue: IEither<A, B>): IEither<A, C>;
   end;
 
-  LeftVal<A, B> = class(TInterfacedObject, IEither<A, B>)
+  LeftVal<A, B> = class(TInterfacedObject, IEither<A, B>, ILeftVal<A, B>)
   strict private
     fValue: A;
   public
     constructor Create(const AValue: A);
-    property Value: A read fValue;
+    function GetValue: A;
+    property Value: A read GetValue;
   end;
 
-  RightVal<A, B> = class(TInterfacedObject, IEither<A, B>)
+  RightVal<A, B> = class(TInterfacedObject, IEither<A, B>, IRightVal<A, B>)
   strict private
     fValue: B;
   public
     constructor Create(const AValue: B);
-    property Value: B read fValue;
+    function GetValue: B;
+    property Value: B read GetValue;
   end;
 
 implementation
 
 { Either }
 
-class function Either.AndMap<A, B, C>(const AFunc: IEither<A, TFunc<B, C>>;
-  const AValue: IEither<A, B>): IEither<A, C>;
-begin
-  if AFunc is LeftVal<A, TFunc<B, C>> then begin
-    Result := Left<A, C>((AFunc as LeftVal<A, TFunc<B, C>>).Value);
-  end else if AValue is LeftVal<A, B> then begin
-    Result := Left<A, C>((AValue as LeftVal<A, B>).Value);
-  end else begin
-    Result := Right<A, C>((AFunc as RightVal<A, TFunc<B, C>>).Value((AValue as RightVal<A, B>).Value));
-  end;
-end;
-
 class function Either.AndThen<A, B, C>(const AFunc: TFunc<B, IEither<A, C>>;
   const AValue: IEither<A, B>): IEither<A, C>;
+var
+  L: ILeftVal<A, B>;
 begin
-  if AValue is LeftVal<A, B> then begin
-    Result := Left<A, C>((AValue as LeftVal<A, B>).Value);
+  if Supports(AValue, ILeftVal<A, B>, L) then begin
+    Result := Left<A, C>(L.Value);
   end else begin
-    Result := AFunc((AValue as RightVal<A, B>).Value);
+    Result := AFunc((AValue as IRightVal<A, B>).Value);
   end;
 end;
 
@@ -74,21 +76,25 @@ end;
 
 class function Either.Map<A, B, C>(const AFunc: TFunc<B, C>;
   const AValue: IEither<A, B>): IEither<A, C>;
+var
+  L: ILeftVal<A, B>;
 begin
-  if AValue is LeftVal<A, B> then begin
-    Result := Left<A, C>((AValue as LeftVal<A, B>).Value);
+  if Supports(AValue, ILeftVal<A, B>, L) then begin
+    Result := Left<A, C>(L.Value);
   end else begin
-    Result := Right<A, C>(AFunc((AValue as RightVal<A, B>).Value));
+    Result := Right<A, C>(AFunc((AValue as IRightVal<A, B>).Value));
   end;
 end;
 
 class function Either.Match<A, B, C>(const AWhenLeft: TFunc<A, C>;
   const AWhenRight: TFunc<B, C>; const AValue: IEither<A, B>): C;
+var
+  L: ILeftVal<A, B>;
 begin
-  if AValue is LeftVal<A, B> then begin
-    Result := AWhenLeft((AValue as LeftVal<A, B>).Value);
+  if Supports(AValue, ILeftVal<A, B>, L) then begin
+    Result := AWhenLeft(L.Value);
   end else begin
-    Result := AWhenRight((AValue as RightVal<A, B>).Value);
+    Result := AWhenRight((AValue as IRightVal<A, B>).Value);
   end;
 end;
 
@@ -105,12 +111,22 @@ begin
   fValue := AValue;
 end;
 
+function LeftVal<A, B>.GetValue: A;
+begin
+  Result := fValue;
+end;
+
 { RightVal<A, B> }
 
 constructor RightVal<A, B>.Create(const AValue: B);
 begin
   inherited Create;
   fValue := AValue;
+end;
+
+function RightVal<A, B>.GetValue: B;
+begin
+  Result := fValue;
 end;
 
 end.

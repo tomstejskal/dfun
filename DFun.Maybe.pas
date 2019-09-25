@@ -11,6 +11,16 @@ type
   ['{DD482B38-350F-4AA9-9B3E-7A731752C123}']
   end;
 
+  INothingVal<A> = interface(IMaybe<A>)
+  ['{D7EDD0CC-5217-4FDA-AD4F-CB2BEF8E2AE3}']
+  end;
+
+  IJustVal<A> = interface(IMaybe<A>)
+  ['{4B9C00B2-8112-45C1-9872-ECF0E2030134}']
+    function GetValue: A;
+    property Value: A read GetValue;
+  end;
+
   Maybe = class
     class function Nothing<A>: IMaybe<A>;
     class function Just<A>(const AValue: A): IMaybe<A>;
@@ -19,42 +29,33 @@ type
       const AValue: IMaybe<A>): B;
     class function Map<A, B>(const AFunc: TFunc<A, B>;
       const AValue: IMaybe<A>): IMaybe<B>;
-    class function AndMap<A, B>(const AFunc: IMaybe<TFunc<A, B>>;
-      const AValue: IMaybe<A>): IMaybe<B>;
     class function AndThen<A, B>(const AFunc: TFunc<A, IMaybe<B>>;
       const AValue: IMaybe<A>): IMaybe<B>;
   end;
 
-  NothingVal<A> = class(TInterfacedObject, IMaybe<A>)
+  NothingVal<A> = class(TInterfacedObject, IMaybe<A>, INothingVal<A>)
   end;
 
-  JustVal<A> = class(TInterfacedObject, IMaybe<A>)
+  JustVal<A> = class(TInterfacedObject, IMaybe<A>, IJustVal<A>)
   strict private
     fValue: A;
   public
     constructor Create(const AValue: A);
-    property Value: A read fValue;
+    function GetValue: A;
+    property Value: A read GetValue;
   end;
 
 implementation
 
 { Maybe }
 
-class function Maybe.AndMap<A, B>(const AFunc: IMaybe<TFunc<A, B>>;
-  const AValue: IMaybe<A>): IMaybe<B>;
-begin
-  if (AFunc is JustVal<TFunc<A, B>>) and (AValue is JustVal<A>) then begin
-    Result := Just<B>((AFunc as JustVal<TFunc<A, B>>).Value((AValue as JustVal<A>).Value));
-  end else begin
-    Result := Nothing<B>;
-  end;
-end;
-
 class function Maybe.AndThen<A, B>(const AFunc: TFunc<A, IMaybe<B>>;
   const AValue: IMaybe<A>): IMaybe<B>;
+var
+  X: IJustVal<A>;
 begin
-  if AValue is JustVal<A> then begin
-    Result := AFunc((AValue as JustVal<A>).Value);
+  if Supports(AValue, IJustVal<A>, X) then begin
+    Result := AFunc(X.Value);
   end else begin
     Result := Nothing<B>;
   end;
@@ -67,9 +68,11 @@ end;
 
 class function Maybe.Map<A, B>(const AFunc: TFunc<A, B>;
   const AValue: IMaybe<A>): IMaybe<B>;
+var
+  X: IJustVal<A>;
 begin
-  if AValue is JustVal<A> then begin
-    Result := Just<B>(AFunc((AValue as JustVal<A>).Value));
+  if Supports(AValue, IJustVal<A>, X) then begin
+    Result := Just<B>(AFunc(X.Value));
   end else begin
     Result := Nothing<B>;
   end;
@@ -77,9 +80,11 @@ end;
 
 class function Maybe.Match<A, B>(const AWhenNothing: TFunc<B>;
   const AWhenJust: TFunc<A, B>; const AValue: IMaybe<A>): B;
+var
+  X: IJustVal<A>;
 begin
-  if AValue is JustVal<A> then begin
-    Result := AWhenJust((AValue as JustVal<A>).Value);
+  if Supports(AValue, IJustVal<A>, X) then begin
+    Result := AWhenJust(X.Value);
   end else begin
     Result := AWhenNothing;
   end;
@@ -96,6 +101,11 @@ constructor JustVal<A>.Create(const AValue: A);
 begin
   inherited Create;
   fValue := AValue;
+end;
+
+function JustVal<A>.GetValue: A;
+begin
+  Result := fValue;
 end;
 
 end.

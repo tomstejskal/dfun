@@ -13,7 +13,7 @@ type
   ['{F2AD450F-F208-4026-B603-A95C9C69191D}']
   end;
 
-  IEmptyCell<A> = interface
+  IEmptyCell<A> = interface(IList<A>)
   ['{F382F9DC-3615-4FFA-BC44-4A055FC8A78B}']
   end;
 
