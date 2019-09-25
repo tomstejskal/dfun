@@ -26,6 +26,7 @@ type
     procedure TestAll;
     procedure TestAny;
     procedure TestEach;
+    procedure TestSortBy;
   end;
 
 implementation
@@ -134,6 +135,16 @@ begin
       List.Map<Integer, String>(IntToStr,
         List.Reverse<Integer>(
           List.FromArray<Integer>([1, 2, 3, 4, 5])))));
+end;
+
+procedure ListTest.TestSortBy;
+begin
+  CheckEquals('[1, 2, 3, 4, 5]',
+    List.ToString(
+      List.Map<Integer, String>(IntToStr,
+        List.SortBy<Integer>(
+          function(L, R: Integer): Integer begin Result := L - R end,
+          List.FromArray<Integer>([3, 2, 4, 1, 5])))));
 end;
 
 procedure ListTest.TestSum;

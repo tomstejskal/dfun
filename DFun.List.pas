@@ -6,6 +6,7 @@ uses
   System.Classes,
   System.SysUtils,
   System.Generics.Collections,
+  System.Generics.Defaults,
   DFun.Maybe;
 
 type
@@ -49,8 +50,13 @@ type
       const AList: IList<A>): Boolean;
     class procedure Each<A>(const AProc: TProc<A>;
       const AList: IList<A>);
-    class function ToString(const AList: IList<String>): String;
+    class function SortBy<A>(const AFunc: TFunc<A, A, Integer>;
+      const AList: IList<A>): IList<A>;
+    class function GroupBy<A>(const AFunc: TFunc<A, A, Integer>;
+      const AList: IList<A>): IList<IList<A>>;
+    class function ToString(const AList: IList<String>): String; reintroduce;
     class function FromArray<A>(const AList: array of A): IList<A>;
+    class function FromTList<A>(const AList: TList<A>): IList<A>;
     class function ToTList<A>(const AList: IList<A>): TList<A>;
   end;
 
@@ -67,6 +73,14 @@ type
     function GetTail: IList<A>;
     property Head: A read GetHead;
     property Tail: IList<A> read GetTail;
+  end;
+
+  TComparer<A> = class(TInterfacedObject, IComparer<A>)
+  private
+    fFunc: TFunc<A, A, Integer>;
+  public
+    constructor Create(const AFunc: TFunc<A, A, Integer>);
+    function Compare(const Left, Right: A): Integer;
   end;
 
 implementation
@@ -169,6 +183,22 @@ begin
   end;
 end;
 
+class function List.FromTList<A>(const AList: TList<A>): IList<A>;
+var
+  I: Integer;
+begin
+  Result := Empty<A>;
+  for I := AList.Count - 1 downto 0 do begin
+    Result := Cons<A>(AList[I], Result);
+  end;
+end;
+
+class function List.GroupBy<A>(const AFunc: TFunc<A, A, Integer>;
+  const AList: IList<A>): IList<IList<A>>;
+begin
+
+end;
+
 class function List.Map<A, B>(const AFunc: TFunc<A, B>;
   const AList: IList<A>): IList<B>;
 begin
@@ -214,6 +244,20 @@ begin
     AList);
 end;
 
+class function List.SortBy<A>(const AFunc: TFunc<A, A, Integer>;
+  const AList: IList<A>): IList<A>;
+var
+  Xs: TList<A>;
+begin
+  Xs := List.ToTList<A>(AList);
+  try
+    Xs.Sort(TComparer<A>.Create(AFunc));
+    Result := List.FromTList<A>(Xs);
+  finally
+    Xs.Free;
+  end;
+end;
+
 class function List.Sum(const AList: IList<Extended>): Extended;
 begin
   Result := FoldLeft<Extended, Extended>(
@@ -250,6 +294,19 @@ end;
 function ConsCell<A>.GetTail: IList<A>;
 begin
   Result := fTail;
+end;
+
+{ TComparer<A> }
+
+function TComparer<A>.Compare(const Left, Right: A): Integer;
+begin
+  Result := fFunc(Left, Right);
+end;
+
+constructor TComparer<A>.Create(const AFunc: TFunc<A, A, Integer>);
+begin
+  inherited Create;
+  fFunc := AFunc;
 end;
 
 end.
