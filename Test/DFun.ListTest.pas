@@ -117,12 +117,9 @@ end;
 
 procedure ListTest.TestGenerate;
 begin
-  CheckNotEquals('',
-    List.ToString(
-      List.Map<Integer, String>(IntToStr,
-        List.Generate<Integer>(
-          function: Integer begin Result := Random(1000) end,
-          10000))));
+  List.Generate<Integer>(
+    function: Integer begin Result := Random(1000) end,
+    1000000);
 end;
 
 procedure ListTest.TestGroupBy;
@@ -136,19 +133,19 @@ begin
         List.GroupBy<Integer>(
           function(X, Y: Integer): Integer begin Result := X - Y end,
           List.FromArray<Integer>([1, 1, 2, 2, 2, 3, 4, 4, 5])))));
-  CheckNotEquals('',
+  CheckEquals('',
     List.ToString(
       List.Map<IList<Integer>, String>(
         function(X: IList<Integer>): String begin
           Result := List.ToString(List.Map<Integer, String>(IntToStr, X));
         end,
-        List.GroupBy<Integer>(
-          function(X, Y: Integer): Integer begin Result := X - Y end,
-          List.SortBy<Integer>(
-            function(X, Y: Integer): Integer begin Result := X - y end,
-            List.Generate<Integer>(
-              function: Integer begin Result := Random(1000) end,
-              10000))))));
+  List.GroupBy<Integer>(
+    function(X, Y: Integer): Integer begin Result := X - Y end,
+    List.SortBy<Integer>(
+      function(X, Y: Integer): Integer begin Result := X - y end,
+      List.Generate<Integer>(
+        function: Integer begin Result := Random(1000) end,
+        1000000))))));
 end;
 
 procedure ListTest.TestMap;

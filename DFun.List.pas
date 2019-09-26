@@ -73,6 +73,7 @@ type
     fTail: IList<A>;
   public
     constructor Create(const AHead: A; const ATail: IList<A>);
+    destructor Destroy; override;
     function GetHead: A;
     function GetTail: IList<A>;
     property Head: A read GetHead;
@@ -349,6 +350,21 @@ begin
   inherited Create;
   fHead := AHead;
   fTail := ATail;
+end;
+
+destructor ConsCell<A>.Destroy;
+var
+  Xs: IList<A>;
+  Ys: IList<A>;
+begin
+  Xs := Tail;
+  while Xs is ConsCell<A> do begin
+    Ys := ConsCell<A>(Xs).Tail;
+    ConsCell<A>(Xs).fTail := nil;
+    Xs := Ys;
+    Ys := nil;
+  end;
+  inherited;
 end;
 
 function ConsCell<A>.GetHead: A;
