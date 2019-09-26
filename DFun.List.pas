@@ -30,6 +30,7 @@ type
   List = class
     class function Empty<A>: IList<A>;
     class function Cons<A>(const AHead: A; const ATail: IList<A>): IList<A>;
+    class function IsEmpty<A>(const AList: IList<A>): Boolean;
     class function Singleton<A>(const AValue: A): IList<A>;
     class function Generate<A>(const AFunc: TFunc<A>;
       const ACount: Integer): IList<A>;
@@ -37,7 +38,11 @@ type
     class function FromArray<A>(const AList: array of A): IList<A>;
     class function FromTList<A>(const AList: TList<A>): IList<A>;
     class function ToTList<A>(const AList: IList<A>): TList<A>;
+    class function Append<A>(const ALeft, ARight: IList<A>): IList<A>;
+    class function Join<A>(const ALists: IList<IList<A>>): IList<A>;
     class function Map<A, B>(const AFunc: TFunc<A, B>;
+      const AList: IList<A>): IList<B>;
+    class function AndThen<A, B>(const AFunc: TFunc<A, IList<B>>;
       const AList: IList<A>): IList<B>;
     class function Filter<A>(const AFunc: TFunc<A, Boolean>;
       const AList: IList<A>): IList<A>;
@@ -102,6 +107,12 @@ begin
     AList);
 end;
 
+class function List.AndThen<A, B>(const AFunc: TFunc<A, IList<B>>;
+  const AList: IList<A>): IList<B>;
+begin
+  Result := List.Join<B>(List.Map<A, IList<B>>(AFunc, AList));
+end;
+
 class function List.Any<A>(const AFunc: TFunc<A, Boolean>;
   const AList: IList<A>): Boolean;
 begin
@@ -109,6 +120,22 @@ begin
     function(X: A; Acc: Boolean): Boolean begin Result := Acc or AFunc(X) end,
     False,
     AList);
+end;
+
+class function List.Append<A>(const ALeft, ARight: IList<A>): IList<A>;
+begin
+  if IsEmpty<A>(ALeft) then begin
+    Result := ARight;
+  end else if IsEmpty<A>(ARight) then begin
+    Result := ALeft;
+  end else begin
+    Result := FoldRight<A, IList<A>>(
+      function(X: A; Acc: IList<A>): IList<A> begin
+        Result := Cons<A>(X, Acc);
+      end,
+      ARight,
+      ALeft);
+  end;
 end;
 
 class function List.ToString(const AList: IList<String>): String;
@@ -162,14 +189,14 @@ end;
 class function List.FoldLeft<A, B>(const AFunc: TFunc<A, B, B>;
   const AInit: B; const AList: IList<A>): B;
 var
-  mList: IList<A>;
-  mCons: IConsCell<A>;
+  Xs: IList<A>;
+  Cc: IConsCell<A>;
 begin
-  mList := AList;
+  Xs := AList;
   Result := AInit;
-  while Supports(mList, IConsCell<A>, mCons) do begin
-    Result := AFunc(mCons.Head, Result);
-    mList := mCons.Tail;
+  while Supports(Xs, IConsCell<A>, Cc) do begin
+    Result := AFunc(Cc.Head, Result);
+    Xs := Cc.Tail;
   end;
 end;
 
@@ -259,6 +286,21 @@ begin
           Result := List.Cons<IList<A>>(X.Second, Acc.Second);
         end,
         Acc.First));
+end;
+
+class function List.IsEmpty<A>(const AList: IList<A>): Boolean;
+begin
+  Result := Supports(AList, IEmptyCell<A>);
+end;
+
+class function List.Join<A>(const ALists: IList<IList<A>>): IList<A>;
+begin
+  Result := List.FoldLeft<IList<A>, IList<A>>(
+    function(X: IList<A>; Acc: IList<A>): IList<A> begin
+      Result := List.Append<A>(Acc, X);
+    end,
+    List.Empty<A>,
+    ALists);
 end;
 
 class function List.Length<A>(const AList: IList<A>): Integer;

@@ -16,9 +16,13 @@ type
   published
     procedure TestEmpty;
     procedure TestCons;
+    procedure TestIsEmpty;
     procedure TestSingleton;
     procedure TestGenerate;
+    procedure TestAppend;
+    procedure TestJoin;
     procedure TestMap;
+    procedure TestAndThen;
     procedure TestFilter;
     procedure TestFoldLeft;
     procedure TestFoldRight;
@@ -47,6 +51,18 @@ begin
     List.FromArray<Integer>([1, 2, 3, 4, 5])));
 end;
 
+procedure ListTest.TestAndThen;
+begin
+  CheckEquals('[1, 2, 3, 2, 4, 6, 3, 6, 9]',
+    List.ToString(
+      List.Map<Integer, String>(IntToStr,
+        List.AndThen<Integer, Integer>(
+          function(X: Integer): IList<Integer> begin
+            Result := List.FromArray<Integer>([X, X * 2, X * 3])
+          end,
+          List.FromArray<Integer>([1, 2, 3])))));
+end;
+
 procedure ListTest.TestAny;
 begin
   CheckTrue(List.Any<Integer>(
@@ -55,6 +71,34 @@ begin
   CheckFalse(List.Any<Integer>(
     function(X: Integer): Boolean begin Result := X < 0 end,
     List.FromArray<Integer>([1, 2, 3, 4, 5])));
+end;
+
+procedure ListTest.TestAppend;
+begin
+  CheckEquals('[1, 2, 3, 4, 5]',
+    List.ToString(
+      List.Map<Integer, String>(IntToStr,
+        List.Append<Integer>(
+          List.FromArray<Integer>([1, 2]),
+          List.FromArray<Integer>([3, 4, 5])))));
+  CheckEquals('[1, 2]',
+    List.ToString(
+      List.Map<Integer, String>(IntToStr,
+        List.Append<Integer>(
+          List.FromArray<Integer>([1, 2]),
+          List.Empty<Integer>))));
+  CheckEquals('[3, 4, 5]',
+    List.ToString(
+      List.Map<Integer, String>(IntToStr,
+        List.Append<Integer>(
+          List.Empty<Integer>,
+          List.FromArray<Integer>([3, 4, 5])))));
+  CheckEquals('[]',
+    List.ToString(
+      List.Map<Integer, String>(IntToStr,
+        List.Append<Integer>(
+          List.Empty<Integer>,
+          List.Empty<Integer>))));
 end;
 
 procedure ListTest.TestCons;
@@ -145,6 +189,32 @@ begin
           List.Generate<Integer>(
             function: Integer begin Result := Random(1000) end,
             1000000)))));
+end;
+
+procedure ListTest.TestIsEmpty;
+begin
+  CheckTrue(List.IsEmpty<Integer>(List.Empty<Integer>));
+  CheckFalse(List.IsEmpty<Integer>(List.Singleton<Integer>(1)));
+  CheckFalse(List.IsEmpty<Integer>(List.Cons<Integer>(1, List.Empty<Integer>)));
+  CheckFalse(List.IsEmpty<Integer>(List.FromArray<Integer>([1, 2, 3, 4, 5])));
+end;
+
+procedure ListTest.TestJoin;
+begin
+  CheckEquals('[1, 2, 3, 4, 5, 6, 7]',
+    List.ToString(
+      List.Map<Integer, String>(IntToStr,
+        List.Join<Integer>(
+          List.FromArray<IList<Integer>>(
+            [ List.FromArray<Integer>([1, 2])
+            , List.FromArray<Integer>([3, 4, 5])
+            , List.FromArray<Integer>([6, 7])
+            ])))));
+  CheckEquals('[]',
+    List.ToString(
+      List.Map<Integer, String>(IntToStr,
+        List.Join<Integer>(
+          List.Empty<IList<Integer>>))));
 end;
 
 procedure ListTest.TestLength;
