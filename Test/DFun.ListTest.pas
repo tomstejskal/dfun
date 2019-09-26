@@ -5,6 +5,7 @@ interface
 uses
   System.Classes,
   System.SysUtils,
+  System.Generics.Collections,
   TestFramework,
   DFun.List,
   DFun.Maybe;
@@ -19,6 +20,9 @@ type
     procedure TestIsEmpty;
     procedure TestSingleton;
     procedure TestGenerate;
+    procedure TestFromTEnumerable;
+    procedure TestFromTList;
+    procedure TestFromArray;
     procedure TestAppend;
     procedure TestJoin;
     procedure TestMap;
@@ -158,6 +162,46 @@ begin
       end,
       '',
       List.FromArray<String>(['a', 'b', 'c', 'd', 'e'])));
+end;
+
+procedure ListTest.TestFromArray;
+begin
+  CheckEquals('[1, 2, 3, 4, 5]',
+    List.ToString(
+      List.Map<Integer, String>(IntToStr,
+        List.FromArray<Integer>([1, 2, 3, 4, 5]))));
+end;
+
+procedure ListTest.TestFromTEnumerable;
+var
+  Xs: TList<Integer>;
+begin
+  Xs := TList<Integer>.Create;
+  try
+    Xs.AddRange([1, 2, 3, 4, 5]);
+    CheckEquals('[1, 2, 3, 4, 5]',
+      List.ToString(
+        List.Map<Integer, String>(IntToStr,
+          List.FromTEnumerable<Integer>(Xs))));
+  finally
+    Xs.Free;
+  end;
+end;
+
+procedure ListTest.TestFromTList;
+var
+  Xs: TList<Integer>;
+begin
+  Xs := TList<Integer>.Create;
+  try
+    Xs.AddRange([1, 2, 3, 4, 5]);
+    CheckEquals('[1, 2, 3, 4, 5]',
+      List.ToString(
+        List.Map<Integer, String>(IntToStr,
+          List.FromTList<Integer>(Xs))));
+  finally
+    Xs.Free;
+  end;
 end;
 
 procedure ListTest.TestGenerate;

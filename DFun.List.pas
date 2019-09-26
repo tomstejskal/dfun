@@ -36,6 +36,8 @@ type
       const ACount: Integer): IList<A>;
     class function ToString(const AList: IList<String>): String; reintroduce;
     class function FromArray<A>(const AList: array of A): IList<A>;
+    class function FromEnumerable<A>(const AList: IEnumerable<A>): IList<A>;
+    class function FromTEnumerable<A>(const AList: TEnumerable<A>): IList<A>;
     class function FromTList<A>(const AList: TList<A>): IList<A>;
     class function ToTList<A>(const AList: IList<A>): TList<A>;
     class function Append<A>(const ALeft, ARight: IList<A>): IList<A>;
@@ -214,6 +216,30 @@ begin
   for I := System.Length(AList) - 1 downto 0 do begin
     Result := Cons<A>(AList[I], Result);
   end;
+end;
+
+class function List.FromEnumerable<A>(
+  const AList: IEnumerable<A>): IList<A>;
+var
+  X: A;
+begin
+  Result := Empty<A>;
+  for X in AList do begin
+    Result := Cons<A>(X, Result);
+  end;
+  Result := Reverse<A>(Result);
+end;
+
+class function List.FromTEnumerable<A>(
+  const AList: TEnumerable<A>): IList<A>;
+var
+  X: A;
+begin
+  Result := Empty<A>;
+  for X in AList do begin
+    Result := Cons<A>(X, Result);
+  end;
+  Result := Reverse<A>(Result);
 end;
 
 class function List.FromTList<A>(const AList: TList<A>): IList<A>;
