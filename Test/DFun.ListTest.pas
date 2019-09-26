@@ -30,6 +30,7 @@ type
     procedure TestEach;
     procedure TestSortBy;
     procedure TestGroupBy;
+    procedure TestLength;
   end;
 
 implementation
@@ -117,9 +118,11 @@ end;
 
 procedure ListTest.TestGenerate;
 begin
-  List.Generate<Integer>(
-    function: Integer begin Result := Random(1000) end,
-    1000000);
+  CheckEquals(1000000,
+    List.Length<Integer>(
+      List.Generate<Integer>(
+        function: Integer begin Result := Random(1000) end,
+        1000000)));
 end;
 
 procedure ListTest.TestGroupBy;
@@ -133,19 +136,22 @@ begin
         List.GroupBy<Integer>(
           function(X, Y: Integer): Integer begin Result := X - Y end,
           List.FromArray<Integer>([1, 1, 2, 2, 2, 3, 4, 4, 5])))));
-  CheckEquals('',
-    List.ToString(
-      List.Map<IList<Integer>, String>(
-        function(X: IList<Integer>): String begin
-          Result := List.ToString(List.Map<Integer, String>(IntToStr, X));
-        end,
-  List.GroupBy<Integer>(
-    function(X, Y: Integer): Integer begin Result := X - Y end,
-    List.SortBy<Integer>(
-      function(X, Y: Integer): Integer begin Result := X - y end,
-      List.Generate<Integer>(
-        function: Integer begin Result := Random(1000) end,
-        1000000))))));
+  CheckEquals(1000,
+    List.Length<IList<Integer>>(
+      List.GroupBy<Integer>(
+        function(X, Y: Integer): Integer begin Result := X - Y end,
+        List.SortBy<Integer>(
+          function(X, Y: Integer): Integer begin Result := X - y end,
+          List.Generate<Integer>(
+            function: Integer begin Result := Random(1000) end,
+            1000000)))));
+end;
+
+procedure ListTest.TestLength;
+begin
+  CheckEquals(0, List.Length<Integer>(List.Empty<Integer>));
+  CheckEquals(1, List.Length<Integer>(List.Singleton<Integer>(1)));
+  CheckEquals(5, List.Length<Integer>(List.FromArray<Integer>([1, 2, 3, 4, 5])));
 end;
 
 procedure ListTest.TestMap;

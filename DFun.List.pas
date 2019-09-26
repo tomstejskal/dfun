@@ -33,6 +33,10 @@ type
     class function Singleton<A>(const AValue: A): IList<A>;
     class function Generate<A>(const AFunc: TFunc<A>;
       const ACount: Integer): IList<A>;
+    class function ToString(const AList: IList<String>): String; reintroduce;
+    class function FromArray<A>(const AList: array of A): IList<A>;
+    class function FromTList<A>(const AList: TList<A>): IList<A>;
+    class function ToTList<A>(const AList: IList<A>): TList<A>;
     class function Map<A, B>(const AFunc: TFunc<A, B>;
       const AList: IList<A>): IList<B>;
     class function Filter<A>(const AFunc: TFunc<A, Boolean>;
@@ -58,10 +62,7 @@ type
       const AList: IList<A>): IList<A>;
     class function GroupBy<A>(const AFunc: TFunc<A, A, Integer>;
       const AList: IList<A>): IList<IList<A>>;
-    class function ToString(const AList: IList<String>): String; reintroduce;
-    class function FromArray<A>(const AList: array of A): IList<A>;
-    class function FromTList<A>(const AList: TList<A>): IList<A>;
-    class function ToTList<A>(const AList: IList<A>): TList<A>;
+    class function Length<A>(const AList: IList<A>): Integer;
   end;
 
   EmptyCell<A> = class(TInterfacedObject, IList<A>, IEmptyCell<A>)
@@ -183,7 +184,7 @@ var
   I: Integer;
 begin
   Result := Empty<A>;
-  for I := Length(AList) - 1 downto 0 do begin
+  for I := System.Length(AList) - 1 downto 0 do begin
     Result := Cons<A>(AList[I], Result);
   end;
 end;
@@ -258,6 +259,14 @@ begin
           Result := List.Cons<IList<A>>(X.Second, Acc.Second);
         end,
         Acc.First));
+end;
+
+class function List.Length<A>(const AList: IList<A>): Integer;
+begin
+  Result := FoldLeft<A, Integer>(
+    function(X: A; Acc: Integer): Integer begin Result := Acc + 1 end,
+    0,
+    AList);
 end;
 
 class function List.Map<A, B>(const AFunc: TFunc<A, B>;
