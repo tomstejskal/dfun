@@ -50,6 +50,7 @@
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <DCC_UnitSearchPath>$(BDS)\Source\DUnit\src;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_Define>_CONSOLE_TESTRUNNER;$(DCC_Define)</DCC_Define>
+        <SanitizedProjectName>DFunTests</SanitizedProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_UsePackage>DBXSqliteDriver;bindcompdbx;RESTComponents;DBXInterBaseDriver;vcl;vclactnband;vclFireDAC;NxObjStore;tethering;svnui;dsnapcon;FireDACADSDriver;FireDACMSAccDriver;fmxFireDAC;NxCore;vclimg;TeeDB;FireDAC;vcltouch;NxDB;vcldb;NxCmpl;svn;FireDACSqliteDriver;FireDACPgDriver;inetdb;NCL;NALChromium;NRL;soaprtl;DbxCommonDriver;FireDACIBDriver;fmx;Tee;xmlrtl;soapmidas;vclwinx;rtl;DbxClientDriver;NxWebCmpl;CustomIPTransport;vcldsnap;dbexpress;NAL;vclx;bindcomp;appanalytics;dsnap;FireDACCommon;bindcompvcl;RESTBackendComponents;TeeUI;VCLRESTComponents;soapserver;dbxcds;VclSmp;NxRPCClient;adortl;DSQLite3R;vclie;bindengine;DBXMySQLDriver;CloudService;dsnapxml;FireDACMySQLDriver;dbrtl;inetdbxpress;FireDACCommonODBC;FireDACCommonDriver;DTwain;inet;NxWagesCmpl;$(DCC_UsePackage)</DCC_UsePackage>
@@ -87,6 +88,7 @@
         <DCCReference Include="..\DFun.List.pas"/>
         <DCCReference Include="..\DFun.Maybe.pas"/>
         <DCCReference Include="..\DFun.Pair.pas"/>
+        <DCCReference Include="..\DFun.Null.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -836,6 +838,7 @@
                 <TestFramework>DUnit / Delphi Win32</TestFramework>
                 <TestRunner>GUI</TestRunner>
                 <SourceProjectName>C:\Projects\dfun\DFun.dproj</SourceProjectName>
+                <TestProjectName/>
             </UnitTesting>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
