@@ -35,11 +35,15 @@ type
     class function Generate<A>(const AFunc: TFunc<A>;
       const ACount: Integer): IList<A>;
     class function ToString(const AList: IList<String>): String; reintroduce;
+    class function ToStringWith<A>(const AFunc: TFunc<A, String>;
+      const AList: IList<A>): String;
     class function FromArray<A>(const AList: array of A): IList<A>;
     class function FromEnumerable<A>(const AList: IEnumerable<A>): IList<A>;
     class function FromTEnumerable<A>(const AList: TEnumerable<A>): IList<A>;
     class function FromTList<A>(const AList: TList<A>): IList<A>;
     class function ToTList<A>(const AList: IList<A>): TList<A>;
+    class function Head<A>(const AList: IList<A>): IMaybe<A>;
+    class function Tail<A>(const AList: IList<A>): IMaybe<IList<A>>;
     class function Append<A>(const ALeft, ARight: IList<A>): IList<A>;
     class function Join<A>(const ALists: IList<IList<A>>): IList<A>;
     class function Map<A, B>(const AFunc: TFunc<A, B>;
@@ -69,6 +73,8 @@ type
       const AList: IList<A>): IList<A>;
     class function GroupBy<A>(const AFunc: TFunc<A, A, Integer>;
       const AList: IList<A>): IList<IList<A>>;
+    class function SortAndGroupBy<A>(const AFunc: TFunc<A, A, Integer>;
+      const AList: IList<A>): IList<IList<A>>;
     class function Length<A>(const AList: IList<A>): Integer;
   end;
 
@@ -88,7 +94,7 @@ type
     property Tail: IList<A> read GetTail;
   end;
 
-  TComparer<A> = class(TInterfacedObject, IComparer<A>)
+  TFunComparer<A> = class(TInterfacedObject, IComparer<A>)
   private
     fFunc: TFunc<A, A, Integer>;
   public
@@ -140,18 +146,49 @@ begin
   end;
 end;
 
+class function List.Tail<A>(const AList: IList<A>): IMaybe<IList<A>>;
+var
+  Cc: IConsCell<A>;
+begin
+  if Supports(AList, IConsCell<A>, Cc) then begin
+    Result := Maybe.Just<IList<A>>(Cc.Tail);
+  end else begin
+    Result := Maybe.Nothing<IList<A>>;
+  end;
+end;
+
 class function List.ToString(const AList: IList<String>): String;
 begin
-  Result := '[' + FoldLeft<String, String>(
-    function(X: String; Acc: String): String begin
-      Result := Acc;
-      if Acc <> '' then begin
-        Result := Result + ', ';
-      end;
-      Result := Result + X
-    end,
-    '',
-    AList) + ']';
+  Result := ToStringWith<String>(
+    function(X: String): String begin Result := X end,
+    AList);
+end;
+
+class function List.ToStringWith<A>(const AFunc: TFunc<A, String>;
+  const AList: IList<A>): String;
+var
+  Sb: TStringBuilder;
+  First: Boolean;
+begin
+  First := True;
+  Sb := TStringBuilder.Create;
+  try
+    Sb.Append('[');
+    Each<A>(
+      procedure(X: A) begin
+        if First then begin
+          First := False;
+        end else begin
+          Sb.Append(', ');
+        end;
+        Sb.Append(AFunc(X));
+      end,
+      AList);
+    Sb.Append(']');
+    Result := Sb.ToString;
+  finally
+    Sb.Free;
+  end;
 end;
 
 class function List.Cons<A>(const AHead: A;
@@ -314,6 +351,17 @@ begin
         Acc.First));
 end;
 
+class function List.Head<A>(const AList: IList<A>): IMaybe<A>;
+var
+  Cc: IConsCell<A>;
+begin
+  if Supports(AList, IConsCell<A>, Cc) then begin
+    Result := Maybe.Just<A>(Cc.Head);
+  end else begin
+    Result := Maybe.Nothing<A>;
+  end;
+end;
+
 class function List.IsEmpty<A>(const AList: IList<A>): Boolean;
 begin
   Result := Supports(AList, IEmptyCell<A>);
@@ -387,6 +435,12 @@ begin
   Result := Cons<A>(AValue, Empty<A>);
 end;
 
+class function List.SortAndGroupBy<A>(const AFunc: TFunc<A, A, Integer>;
+  const AList: IList<A>): IList<IList<A>>;
+begin
+  Result := GroupBy<A>(AFunc, SortBy<A>(AFunc, AList));
+end;
+
 class function List.SortBy<A>(const AFunc: TFunc<A, A, Integer>;
   const AList: IList<A>): IList<A>;
 var
@@ -394,7 +448,7 @@ var
 begin
   Xs := List.ToTList<A>(AList);
   try
-    Xs.Sort(TComparer<A>.Create(AFunc));
+    Xs.Sort(TFunComparer<A>.Create(AFunc));
     Result := List.FromTList<A>(Xs);
   finally
     Xs.Free;
@@ -454,14 +508,14 @@ begin
   Result := fTail;
 end;
 
-{ TComparer<A> }
+{ TFunComparer<A> }
 
-function TComparer<A>.Compare(const Left, Right: A): Integer;
+function TFunComparer<A>.Compare(const Left, Right: A): Integer;
 begin
   Result := fFunc(Left, Right);
 end;
 
-constructor TComparer<A>.Create(const AFunc: TFunc<A, A, Integer>);
+constructor TFunComparer<A>.Create(const AFunc: TFunc<A, A, Integer>);
 begin
   inherited Create;
   fFunc := AFunc;
