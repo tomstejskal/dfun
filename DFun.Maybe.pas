@@ -27,6 +27,12 @@ type
     class function Match<A, B>(const AWhenNothing: TFunc<B>;
       const AWhenJust: TFunc<A, B>;
       const AValue: IMaybe<A>): B;
+    class function WhenNothing<A, B>(const AFunc: TFunc<B>;
+      const AElse: B;
+      const AValue: IMaybe<A>): B;
+    class function WhenJust<A, B>(const AFunc: TFunc<A, B>;
+      const AElse: B;
+      const AValue: IMaybe<A>): B;
     class function Map<A, B>(const AFunc: TFunc<A, B>;
       const AValue: IMaybe<A>): IMaybe<B>;
     class function AndThen<A, B>(const AFunc: TFunc<A, IMaybe<B>>;
@@ -93,6 +99,28 @@ end;
 class function Maybe.Nothing<A>: IMaybe<A>;
 begin
   Result := NothingVal<A>.Create;
+end;
+
+class function Maybe.WhenJust<A, B>(const AFunc: TFunc<A, B>;
+  const AElse: B; const AValue: IMaybe<A>): B;
+var
+  X: IJustVal<A>;
+begin
+  if Supports(AValue, IJustVal<A>, X) then begin
+    Result := AFunc(X.Value);
+  end else begin
+    Result := AElse;
+  end;
+end;
+
+class function Maybe.WhenNothing<A, B>(const AFunc: TFunc<B>;
+  const AElse: B; const AValue: IMaybe<A>): B;
+begin
+  if Supports(AValue, INothingVal<A>) then begin
+    Result := AFunc;
+  end else begin
+    Result := AElse;
+  end;
 end;
 
 { JustVal<A> }
