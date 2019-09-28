@@ -4,7 +4,8 @@ interface
 
 uses
   System.Classes,
-  System.SysUtils;
+  System.SysUtils,
+  DFun.Null;
 
 type
   IMaybe<A> = interface
@@ -26,13 +27,20 @@ type
     class function Just<A>(const AValue: A): IMaybe<A>;
     class function Match<A, B>(const AWhenNothing: TFunc<B>;
       const AWhenJust: TFunc<A, B>;
-      const AValue: IMaybe<A>): B;
+      const AValue: IMaybe<A>): B; overload;
+    class procedure Match<A>(const AWhenNothing: TProc;
+      const AWhenJust: TProc<A>;
+      const AValue: IMaybe<A>); overload;
     class function WhenNothing<A, B>(const AFunc: TFunc<B>;
       const AElse: B;
-      const AValue: IMaybe<A>): B;
+      const AValue: IMaybe<A>): B; overload;
+    class procedure WhenNothing<A>(const AProc: TProc;
+      const AValue: IMaybe<A>); overload;
     class function WhenJust<A, B>(const AFunc: TFunc<A, B>;
       const AElse: B;
-      const AValue: IMaybe<A>): B;
+      const AValue: IMaybe<A>): B; overload;
+    class procedure WhenJust<A>(const AProc: TProc<A>;
+      const AValue: IMaybe<A>); overload;
     class function Map<A, B>(const AFunc: TFunc<A, B>;
       const AValue: IMaybe<A>): IMaybe<B>;
     class function AndThen<A, B>(const AFunc: TFunc<A, IMaybe<B>>;
@@ -84,6 +92,15 @@ begin
   end;
 end;
 
+class procedure Maybe.Match<A>(const AWhenNothing: TProc;
+  const AWhenJust: TProc<A>; const AValue: IMaybe<A>);
+begin
+  Match<A, INull>(
+    function: INull begin AWhenNothing; Result := Null.Value; end,
+    function(X: A): INull begin AWhenJust(X); Result := Null.Value; end,
+    AValue);
+end;
+
 class function Maybe.Match<A, B>(const AWhenNothing: TFunc<B>;
   const AWhenJust: TFunc<A, B>; const AValue: IMaybe<A>): B;
 var
@@ -103,24 +120,38 @@ end;
 
 class function Maybe.WhenJust<A, B>(const AFunc: TFunc<A, B>;
   const AElse: B; const AValue: IMaybe<A>): B;
-var
-  X: IJustVal<A>;
 begin
-  if Supports(AValue, IJustVal<A>, X) then begin
-    Result := AFunc(X.Value);
-  end else begin
-    Result := AElse;
-  end;
+  Result := Match<A, B>(
+    function: B begin Result := AElse end,
+    function(X: A): B begin Result := AFunc(X) end,
+    AValue);
+end;
+
+class procedure Maybe.WhenJust<A>(const AProc: TProc<A>;
+  const AValue: IMaybe<A>);
+begin
+  WhenJust<A, INull>(
+    function(X: A): INull begin AProc(X); Result := Null.Value; end,
+    Null.Value,
+    AValue);
 end;
 
 class function Maybe.WhenNothing<A, B>(const AFunc: TFunc<B>;
   const AElse: B; const AValue: IMaybe<A>): B;
 begin
-  if Supports(AValue, INothingVal<A>) then begin
-    Result := AFunc;
-  end else begin
-    Result := AElse;
-  end;
+  Result := Match<A, B>(
+    AFunc,
+    function(X: A): B begin Result := AElse end,
+    AValue);
+end;
+
+class procedure Maybe.WhenNothing<A>(const AProc: TProc;
+  const AValue: IMaybe<A>);
+begin
+  WhenNothing<A, INull>(
+    function: INull begin AProc; Result := Null.Value; end,
+    Null.Value,
+    AValue);
 end;
 
 { JustVal<A> }
