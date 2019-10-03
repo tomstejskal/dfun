@@ -13,7 +13,6 @@ type
 
   Null = class
     class var Value: INull;
-    class constructor Create;
   end;
 
   TNull = class(TInterfacedObject, INull)
@@ -21,11 +20,7 @@ type
 
 implementation
 
-{ Null }
-
-class constructor Null.Create;
-begin
-  Value := TNull.Create;
-end;
+initialization
+  Null.Value := TNull.Create;
 
 end.

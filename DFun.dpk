@@ -35,6 +35,7 @@ contains
   DFun.List in 'DFun.List.pas',
   DFun.Maybe in 'DFun.Maybe.pas',
   DFun.Pair in 'DFun.Pair.pas',
-  DFun.Null in 'DFun.Null.pas';
+  DFun.Null in 'DFun.Null.pas',
+  DFun.IO in 'DFun.IO.pas';
 
 end.

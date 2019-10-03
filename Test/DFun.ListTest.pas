@@ -11,8 +11,6 @@ uses
   DFun.Maybe;
 
 type
-  // Test methods for class List
-
   ListTest = class(TTestCase)
   published
     procedure TestEmpty;

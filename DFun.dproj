@@ -82,6 +82,7 @@
         <DCCReference Include="DFun.Maybe.pas"/>
         <DCCReference Include="DFun.Pair.pas"/>
         <DCCReference Include="DFun.Null.pas"/>
+        <DCCReference Include="DFun.IO.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -119,7 +120,7 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\nexus\fun\bin\DFun.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="..\nexus\line07\bin\DFun.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>DFun.bpl</RemoteName>
                         <Overwrite>true</Overwrite>
